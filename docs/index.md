@@ -1,3 +1,7 @@
+## Greevil
+Easy Finance Management that uses RESTful web services. 
+For the web-part, see [greevil-web](https://github.com/sreedeepack/greevil-web)
+
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/Acquil/greevil-app/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
