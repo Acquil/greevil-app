@@ -14,7 +14,7 @@ api = Api(
 
 @api.representation('application/xml')
 def xml(data, code, headers):
-    resp = make_response(XmlTransformer(data), code)
+    resp = make_response(str(XmlTransformer(data)), code)
     resp.headers.extend(headers)
     return resp
 
