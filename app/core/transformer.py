@@ -17,6 +17,8 @@ class XmlTransformer(object):
         else:
             # set "response" as default root element
             root_name = "response"
+            data_temp = data
+            data = {root_name: data_temp}
 
         self.root = self.doc.createElement(root_name)
         self.doc.appendChild(self.root)
