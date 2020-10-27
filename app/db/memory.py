@@ -86,6 +86,15 @@ class Repository(object):
         setattr(exp_obj, field, data)
         return exp_obj
 
+    def delete_expense(self, id):
+        """Delete the specified expense."""
+        exp_obj: Expense = self.get_expense(id)
+        payor = self.get_user(exp_obj.payor)
+        payee = self.get_user(exp_obj.user_id)
+        self.update_user(payor, "expense_ids", payor.expense_ids.remove(id))
+        if payor.id != payee.id:
+            self.update_user(payor, "expense_ids", payor.expense_ids.remove(id))
+
     def add_expense(self, exp: Expense):
         """Adds an expense object to the repository."""
         self.expense_index[exp.id] = exp

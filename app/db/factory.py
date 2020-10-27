@@ -11,6 +11,8 @@ def create_repository(name, settings):
         from .mongo import Repository
     elif name == 'memory':
         from .memory import Repository
+    elif name == 'dynamodb':
+        from .dynamo import Repository
     else:
         raise ValueError('Unknown repository.')
 

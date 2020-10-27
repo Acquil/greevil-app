@@ -18,3 +18,8 @@ six~=1.15.0
 jsonschema~=3.2.0
 pyrsistent~=0.17.3
 setuptools~=50.3.2
+
+
+boto3
+boto
+botocore

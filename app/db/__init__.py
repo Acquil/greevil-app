@@ -44,6 +44,7 @@ class Expense(object):
 
     def __init__(
             self,
+            id=uuid.uuid4(),
             user_id="",
             amount=None,
             description="",
@@ -61,7 +62,7 @@ class Expense(object):
         :param payor:       str
         :param date:        datetime
         """
-        self.id = uuid.uuid4()
+        self.id = id
         self.user_id = user_id
         self.amount = amount
         self.description = description

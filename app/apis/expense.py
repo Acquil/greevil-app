@@ -51,6 +51,30 @@ class AddExpense(Resource):
             return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
 
 
+@api.route('/delete/')
+class DeleteExpense(Resource):
+    model = api.model(
+        "DeleteExpense", {
+            "id": fields.String(description="Expense to be deleted")
+        }
+    )
+
+    @api.expect(model, validate=True)
+    def post(self):
+        """
+        Delete expense
+        """
+        try:
+            data = request.get_json(force=True)
+            id = data['id']
+            repository.delete_expense(id)
+            return ReturnDocument(id, "success").asdict()
+        except RepositoryException as err:
+            return ReturnDocument(err.__doc__, "error").asdict()
+        except KeyError or ValueError as err:
+            return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
+
+
 @api.route('/')
 class GetExpense(Resource):
     model = api.model(
