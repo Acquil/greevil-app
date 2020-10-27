@@ -81,6 +81,8 @@ class AddUser(Resource):
             return {'status': "done"}
         except RepositoryException as err:
             return ReturnDocument(err.__doc__, "error").asdict()
+        except KeyError as err:
+            return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
 
 
 @api.route('/add/friend/')

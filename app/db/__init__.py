@@ -44,7 +44,7 @@ class Expense(object):
 
     def __init__(
             self,
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             user_id="",
             amount=None,
             description="",

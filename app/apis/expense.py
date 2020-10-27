@@ -40,14 +40,17 @@ class AddExpense(Resource):
             comments = data['comments']
             payor = data['payor']
 
-            repository.get_user(email)
-            exp: Expense = Expense(email, amount, date, description, comments, payor)
+            exp: Expense = Expense(user_id=email, amount=amount, date=date, description=description, comments=comments,
+                                   payor=payor)
+            print(f"exp id={exp.id}")
             repository.add_expense(exp)
             return ReturnDocument(exp.id, "success").asdict()
 
         except RepositoryException as err:
             return ReturnDocument(err.__doc__, "error").asdict()
-        except KeyError or ValueError as err:
+        except KeyError as err:
+            return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
+        except ValueError as err:
             return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
 
 
