@@ -1,4 +1,5 @@
-from flask_restx import Namespace, Resource
+from flask import request
+from flask_restx import Namespace, Resource, fields
 
 from core.data import ReturnDocument
 from db import Expense, RepositoryException
@@ -10,19 +11,35 @@ repository = create_repository(REPOSITORY_NAME, REPOSITORY_SETTINGS)
 
 api = Namespace('expenses', description='For managing expenses')
 
+expense_fields = api.model(
+    'AddExpense', {
+        'email': fields.String(description="Email ID of payee", required=True),
+        'amount': fields.Float(description="Description of expense", required=True, min=0),
+        'date': fields.Date(description='Date of expense in ISO format(yy-mm-dd)'),
+        'description': fields.String(description='Description of expense'),
+        'comments': fields.String(description='Additional comments'),
+        "payor": fields.String(description='Email ID of payor'),
+    },
+)
 
-@api.route('/add/<email>&<amount>')
-@api.param('payor', 'Email ID of payor')
-@api.param('comments', 'Additional comments')
-@api.param('description', 'Description of expense')
-@api.param('date', 'Date of expense')
-@api.param('amount', 'Amount paid')
-@api.param('email', 'Email ID of payee')
+
+@api.route('/add/')
 class AddExpense(Resource):
-    """Add expense"""
 
-    def post(self, email, amount, date=None, description=None, comments=None, payor=None):
+    @api.expect(expense_fields, validate=True)
+    def post(self):
+        """
+        Add expense
+        """
         try:
+            data = request.get_json(force=True)
+            email = data['email']
+            amount = data['amount']
+            date = data['date']
+            description = data['description']
+            comments = data['comments']
+            payor = data['payor']
+
             repository.get_user(email)
             exp: Expense = Expense(email, amount, date, description, comments, payor)
             repository.add_expense(exp)
@@ -30,16 +47,26 @@ class AddExpense(Resource):
 
         except RepositoryException as err:
             return ReturnDocument(err.__doc__, "error").asdict()
+        except KeyError or ValueError as err:
+            return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
 
 
-@api.route('/<id>')
+@api.route('/')
 class GetExpense(Resource):
-    """Get details of a particular expense"""
+    model = api.model(
+        "GetExpense", {"id": fields.String()}
+    )
 
-    def get(self, id):
+    @api.expect(model)
+    def post(self):
+        """Get details of a particular expense"""
         try:
+            data = request.get_json()
+            id = data['id']
             exp: Expense = repository.get_expense(id)
             return ReturnDocument(exp.to_dict(), "success").asdict()
 
         except RepositoryException as err:
             return ReturnDocument(err.__doc__, "error").asdict()
+        except KeyError or ValueError as err:
+            return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
