@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import xmltodict
 from flask import request
@@ -21,12 +22,6 @@ query_user_fields = api.model(
 add_user_fields = api.model(
     'AddUser', {'email': fields.String, 'name': fields.String},
 )
-add_friend_fields = api.model(
-    'AddFriend', {'your_id': fields.String, 'friend_id': fields.String},
-)
-filtered_expense_fields = api.model(
-    'UserExpenses', {'email': fields.String, 'from_date': fields.Date, 'to_date': fields.Date, }
-)
 
 
 @api.route('/search/<email>')
@@ -45,10 +40,8 @@ class QueryUser(Resource):
 
 @api.route('/search/')
 class QueryUserJson(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('email', type=str)
 
-    @api.expect(query_user_fields)
+    @api.expect(query_user_fields, validate=True)
     def post(self):
         """Get user by email-id"""
         json_data = request.get_json(force=True)
@@ -63,23 +56,21 @@ class QueryUserJson(Resource):
 @api.route('/search/xml/', doc=False)
 class QueryUserXml(Resource):
     parser = reqparse.RequestParser()
-    # parser.add_argument('User-Agent', location='values')
-    parser.add_argument('last_name', type=str)
+    parser.add_argument('Content-Type', required=False, default='application/xml', location="headers")
+    parser.add_argument('last_name', type=str, location="form")
     parser.add_argument('first_name', type=str)
-    parser.add_argument('personal_data', type=dict)
 
-    def get(self):
+    # parser.add_argument('personal_data', type=dict, location="json", help="Personal Data")
+    @api.expect(parser)
+    def post(self):
         xml_data = xmltodict.parse(request.get_data())
         return dict(xml_data)
 
 
 @api.route('/add/')
 class AddUser(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('email', type=str)
-    parser.add_argument('name', type=str)
 
-    @api.expect(add_user_fields)
+    @api.expect(add_user_fields, validate=True)
     def post(self):
         """Add user"""
         json_data = request.get_json(force=True)
@@ -94,13 +85,18 @@ class AddUser(Resource):
 
 @api.route('/add/friend/')
 class AddFriend(Resource):
-    """Add friend"""
-    parser = reqparse.RequestParser()
-    parser.add_argument('your_id', type=str)
-    parser.add_argument('friend_id', type=str)
+    add_friend_fields = api.model(
+        'AddFriend', {
+            'your_id': fields.String(description="User email ID", required=True),
+            'friend_id': fields.String(description="Email ID of friend", required=True)
+        },
+    )
 
-    @api.expect(add_friend_fields)
+    @api.expect(add_friend_fields, validate=True)
     def post(self):
+        """
+        Add friend
+        """
         json_data = request.get_json(force=True)
         id = json_data['your_id']
         fid = json_data['friend_id']
@@ -113,22 +109,31 @@ class AddFriend(Resource):
 
 @api.route("/view/expenses/")
 class GetUserExpenses(Resource):
+    filtered_expense_fields = api.model(
+        'UserExpenses', {
+            'email': fields.String(description="User email ID", required=True),
+            'from_date': fields.Date(description="For filtering"),
+            'to_date': fields.Date(description="For filtering"),
+        },
+    )
 
-    @api.expect(filtered_expense_fields)
+    @api.expect(filtered_expense_fields, validate=True)
     def post(self):
         """
         Get all expenses of a particular user
         """
-        parser = reqparse.RequestParser()
-        parser.add_argument('your_id', type=str)
-        parser.add_argument('friend_id', type=str)
-
         data = request.get_json(force=True)
         email_id = data['email']
-        from_date = data['from_date']
-        from_date = time.strptime(from_date, "%d/%m/%Y")
-        to_date = data['to_date']
-        to_date = time.strptime(to_date, "%d/%m/%Y")
+        from_date = data.get('from_date')
+        to_date = data.get('to_date')
+
+        if from_date is None:
+            from_date = datetime(1970, 1, 1)
+        elif to_date is None:
+            to_date = datetime.utcnow()
+        else:
+            from_date = time.strptime(from_date, "%Y-%m-%d")
+            to_date = time.strptime(to_date, "%Y-%m-%d")
 
         result = []
         try:
