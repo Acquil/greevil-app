@@ -1,7 +1,8 @@
 """
 Package for the db models.
 """
-import uuid
+import hashlib
+import time
 from datetime import datetime
 
 
@@ -44,7 +45,7 @@ class Expense(object):
 
     def __init__(
             self,
-            id=str(uuid.uuid4()),
+            id=None,
             user_id="",
             amount=None,
             description="",
@@ -62,6 +63,11 @@ class Expense(object):
         :param payor:       str
         :param date:        datetime
         """
+        if id is None:
+            # For unique id every single time
+            string = str(time.time()) + str(user_id)
+            id = hashlib.md5(string.encode('utf-8')).hexdigest()
+
         self.id = id
         self.user_id = user_id
         self.amount = amount
