@@ -110,7 +110,9 @@ class Repository(object):
         :return: Expense
         """
         try:
-            response = self.expense_index.get_item(id)
+            response = self.expense_index.get_item(
+                Key={'ExpenseId': id}
+            )
             expense_obj: Expense = Expense(
                 id=id,
                 user_id=response['Item']["For"],

@@ -5,6 +5,8 @@ import hashlib
 import time
 from datetime import datetime
 
+import dateutil.parser
+
 
 class User(object):
     """A transcript object for use in db/repository"""
@@ -74,6 +76,8 @@ class Expense(object):
         self.description = description
         self.comments = comments
         self.payor = payor
+        if type(date) == str:
+            date = dateutil.parser.isoparse(date)
         self.date = date
 
     def to_dict(self):
@@ -83,12 +87,11 @@ class Expense(object):
         obj = {
             'id': self.id,
             'user_id': self.user_id,
-            'amount': self.amount,
+            'amount': float(self.amount),
             'description': self.description,
             'comments': self.comments,
             'payor': self.payor,
-            'date': self.date,
-
+            'date': self.date.isoformat(),
         }
         return obj
 

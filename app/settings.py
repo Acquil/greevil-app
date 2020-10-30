@@ -7,6 +7,10 @@ environment variables, or set the default values in code here.
 
 from os import environ
 
+cognitoUserPoolId = "us-east-1_N3LQnEiUA"
+cognitoUserPoolClientId = "2ar481vjkra0k54fu6c6vre6m0"
+awsRegion = 'us-east-1'
+
 # default storage
 REPOSITORY_NAME = environ.get('REPOSITORY_NAME', 'dynamodb')
 
@@ -24,3 +28,4 @@ elif REPOSITORY_NAME == 'dynamodb':
 
 else:
     raise ValueError('Unknown repository.')
+

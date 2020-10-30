@@ -20,6 +20,8 @@ pyrsistent~=0.17.3
 setuptools~=50.3.2
 
 
-boto3
+boto3~=1.16.8
 boto
-botocore
+botocore~=1.19.8
+warrant~=0.6.1
+python-dateutil~=2.8.1

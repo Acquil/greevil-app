@@ -133,9 +133,9 @@ class GetUserExpenses(Resource):
 
         if from_date is None:
             from_date = datetime(1970, 1, 1)
-        elif to_date is None:
+        if to_date is None:
             to_date = datetime.utcnow()
-        else:
+        elif from_date is not None and to_date is not None:
             from_date = time.strptime(from_date, "%Y-%m-%d")
             to_date = time.strptime(to_date, "%Y-%m-%d")
 
@@ -145,6 +145,9 @@ class GetUserExpenses(Resource):
             for exp in usr.expense_ids:
                 exp_obj: Expense = repository.get_expense(exp)
                 # Filter date
+                print(from_date)
+                print(exp_obj.date)
+                print(to_date)
                 if from_date < exp_obj.date < to_date:
                     result.append(exp_obj.to_dict())
             return ReturnDocument(result, "success").asdict()

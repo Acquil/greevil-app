@@ -44,6 +44,7 @@ class AddExpense(Resource):
                                    payor=payor)
             print(f"exp id={exp.id}")
             repository.add_expense(exp)
+            print(ReturnDocument(exp.id, "success").asdict())
             return ReturnDocument(exp.id, "success").asdict()
 
         except RepositoryException as err:
