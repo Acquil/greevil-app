@@ -125,6 +125,8 @@ class GetUserExpenses(Resource):
         Get all expenses of a particular user
         """
         data = request.get_json(force=True)
+        print("HELLLO")
+        print(data)
         email_id = data['email']
         from_date = data.get('from_date')
         to_date = data.get('to_date')

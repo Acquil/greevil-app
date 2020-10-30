@@ -8,7 +8,7 @@ environment variables, or set the default values in code here.
 from os import environ
 
 # default storage
-REPOSITORY_NAME = environ.get('REPOSITORY_NAME', 'memory')
+REPOSITORY_NAME = environ.get('REPOSITORY_NAME', 'dynamodb')
 
 if REPOSITORY_NAME == 'mongodb':
     REPOSITORY_SETTINGS = {
@@ -18,5 +18,9 @@ if REPOSITORY_NAME == 'mongodb':
     }
 elif REPOSITORY_NAME == 'memory':
     REPOSITORY_SETTINGS = {}
+
+elif REPOSITORY_NAME == 'dynamodb':
+    REPOSITORY_SETTINGS = {}
+
 else:
     raise ValueError('Unknown repository.')
