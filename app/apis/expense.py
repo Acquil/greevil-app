@@ -14,7 +14,7 @@ api = Namespace('expenses', description='For managing expenses')
 expense_fields = api.model(
     'AddExpense', {
         'email': fields.String(description="Email ID of payee", required=True),
-        'amount': fields.Float(description="Description of expense", required=True, min=0),
+        'amount': fields.String(description="Description of expense", required=True, min=1),
         'date': fields.Date(description='Date of expense in ISO format(yy-mm-dd)'),
         'description': fields.String(description='Description of expense'),
         'comments': fields.String(description='Additional comments'),
@@ -26,13 +26,15 @@ expense_fields = api.model(
 @api.route('/add/')
 class AddExpense(Resource):
 
-    @api.expect(expense_fields, validate=True)
+    @api.expect(expense_fields, validate=False)
     def post(self):
         """
         Add expense
         """
         try:
+
             data = request.get_json(force=True)
+            print(data)
             email = data['email']
             amount = data['amount']
             date = data['date']

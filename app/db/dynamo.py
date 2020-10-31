@@ -140,8 +140,9 @@ class Repository(object):
         exp_obj: Expense = self.get_expense(id)
         payor = self.get_user(exp_obj.payor)
         payee = self.get_user(exp_obj.user_id)
-        payee_expenses = payee.expense_ids.remove(id)
-
+        payee_expenses = payee.expense_ids
+        payee_expenses.remove(id)
+        # TODO if None put an empty list
         self.expense_index.delete_item(
             Key={
                 'ExpenseId': id
@@ -160,7 +161,8 @@ class Repository(object):
         )
 
         if exp_obj.payor != exp_obj.user_id:
-            payor_expenses = payor.expense_ids.remove(id)
+            payor_expenses = payor.expense_ids
+            payor_expenses.remove(id)
             self.user_index.update_item(
                 Key={
                     'CustomerId': exp_obj.payor
@@ -188,7 +190,7 @@ class Repository(object):
                 'By': exp.payor
             }
         )
-
+        print(f"Expense response {response}")
         self.__expense_helper__(exp.id, exp.payor)
         if exp.user_id != exp.payor:
             self.__expense_helper__(exp.id, exp.user_id)

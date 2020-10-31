@@ -1,7 +1,9 @@
 import time
 from datetime import datetime
 
+import dateutil.parser
 import xmltodict
+from botocore.exceptions import ClientError
 from flask import request
 from flask_restx import Namespace, Resource, fields
 from flask_restx import reqparse
@@ -125,19 +127,19 @@ class GetUserExpenses(Resource):
         Get all expenses of a particular user
         """
         data = request.get_json(force=True)
-        print("HELLLO")
         print(data)
         email_id = data['email']
         from_date = data.get('from_date')
         to_date = data.get('to_date')
 
+        if from_date is not None and to_date is not None:
+            from_date = time.strptime(from_date, "%Y-%m-%d")
+            to_date = time.strptime(to_date, "%Y-%m-%d")
+
         if from_date is None:
             from_date = datetime(1970, 1, 1)
         if to_date is None:
             to_date = datetime.utcnow()
-        elif from_date is not None and to_date is not None:
-            from_date = time.strptime(from_date, "%Y-%m-%d")
-            to_date = time.strptime(to_date, "%Y-%m-%d")
 
         result = []
         try:
@@ -148,9 +150,11 @@ class GetUserExpenses(Resource):
                 print(from_date)
                 print(exp_obj.date)
                 print(to_date)
-                if from_date < exp_obj.date < to_date:
+                if from_date < dateutil.parser.isoparse(exp_obj.date) < to_date:
                     result.append(exp_obj.to_dict())
             return ReturnDocument(result, "success").asdict()
 
         except RepositoryException as err:
             return ReturnDocument(err.__doc__, "error").asdict()
+        except ClientError as err:
+            return ReturnDocument(err.__str__(), "error").asdict()
