@@ -1,8 +1,12 @@
+from datetime import datetime
+
+import pandas as pd
+from botocore.exceptions import ClientError
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from core.data import ReturnDocument
-from db import Expense, RepositoryException
+from db import Expense, RepositoryException, User
 from db.factory import create_repository
 from settings import REPOSITORY_NAME, REPOSITORY_SETTINGS
 
@@ -34,7 +38,7 @@ class AddExpense(Resource):
         try:
 
             data = request.get_json(force=True)
-            print(data)
+
             email = data['email']
             amount = data['amount']
             date = data['date']
@@ -44,9 +48,8 @@ class AddExpense(Resource):
 
             exp: Expense = Expense(user_id=email, amount=amount, date=date, description=description, comments=comments,
                                    payor=payor)
-            print(f"exp id={exp.id}")
             repository.add_expense(exp)
-            print(ReturnDocument(exp.id, "success").asdict())
+
             return ReturnDocument(exp.id, "success").asdict()
 
         except RepositoryException as err:
@@ -100,3 +103,61 @@ class GetExpense(Resource):
             return ReturnDocument(err.__doc__, "error").asdict()
         except KeyError or ValueError as err:
             return ReturnDocument(f"{err.__str__()}-{err.__doc__}", "error").asdict()
+
+
+@api.route('/stats/')
+class ExpenseStats(Resource):
+    model = api.model(
+        "GetStats", {
+            'email': fields.String(description="User email ID", required=True),
+        }
+    )
+
+    @api.expect(model)
+    def post(self):
+        exp_list = []
+        data = request.get_json(force=True)
+        email_id = data['email']
+
+        try:
+            usr: User = repository.get_user(email_id)
+            for exp in usr.expense_ids:
+                exp_obj: Expense = repository.get_expense(exp)
+                exp_list.append(exp_obj.to_dict())
+
+            df = pd.DataFrame(exp_list).sort_values('date')
+
+            df['amount'] = pd.to_numeric(df['amount'])
+            df['month'] = pd.to_numeric(df["date"].apply(lambda x: x[5:7]))
+            df['year'] = pd.to_numeric(df["date"].apply(lambda x: x[0:4]))
+            df['day'] = pd.to_numeric(df["date"].apply(lambda x: x[8:10]))
+
+            now = datetime.now()
+            area_chart = df[df['year'] == now.year].groupby(['date'])['amount'].sum()
+            bar_chart = df.groupby(['month'])['amount'].sum()
+
+            new_expenses = df[(df['year'] == now.year) & (df['month'] == now.month) & (df['day'] == now.day)][
+                'amount'].sum()
+            monthly_expenses = df[(df['year'] == now.year) & (df['month'] == now.month)]['amount'].sum()
+
+            friends_amount = df[(df['payor'] != email_id) & (df['user_id'] == email_id)]['amount'].sum()
+            owed_amount = df[('payor' == email_id) & (df['user_id'] != email_id)]['amount'].sum()
+
+            pie_chart = df[(df['payor'] != email_id) & (df['user_id'] == email_id)].groupby(['payor'])['amount'].sum()
+
+            data = {
+                "exp_list": exp_list,
+                "area_chart": area_chart.to_dict(),
+                "bar_chart": bar_chart.to_dict(),
+                "pie_chart": pie_chart.to_dict(),
+                "new_expenses": new_expenses,
+                "monthly_expenses": monthly_expenses,
+                "friends_amount": friends_amount,
+                "owed_amount": owed_amount
+            }
+
+            return ReturnDocument(data, "success").asdict()
+        except RepositoryException as err:
+            return ReturnDocument(err.__doc__, "error").asdict()
+        except ClientError as err:
+            return ReturnDocument(err.__str__(), "error").asdict()

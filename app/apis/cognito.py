@@ -94,8 +94,9 @@ class InitiateForgetPassword(Resource):
     model = api.model(
         'InitiateForgetPassword', {'email': fields.String},
     )
+
+    @api.expect(model, validate=True)
     def post(self):
-        print("HIIIIs")
         """Sends a verification code to the user to use to change their password."""
         json_data = request.get_json(force=True)
         print(json_data)
@@ -112,14 +113,14 @@ class InitiateForgetPassword(Resource):
 @api.route('/login/forget/')
 class ForgetPassword(Resource):
     model = api.model(
-        'ForgetPassword', {'email': fields.String, 'code': fields.String},
+        'ForgetPassword', {'email': fields.String, 'code': fields.String, "password": fields.String}
     )
 
-    @api.expect(model, validate=True)
+    @api.expect(model, validate=False)
     def post(self):
         """Allows a user to enter a code provided when they reset their password to update their password."""
         json_data = request.get_json(force=True)
-
+        print(f"Reset pwd code: {json_data}")
         email = json_data['email']
         code = json_data['code']
         password = json_data['password']

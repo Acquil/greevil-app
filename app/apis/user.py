@@ -127,7 +127,7 @@ class GetUserExpenses(Resource):
         Get all expenses of a particular user
         """
         data = request.get_json(force=True)
-        print(data)
+
         email_id = data['email']
         from_date = data.get('from_date')
         to_date = data.get('to_date')
@@ -147,9 +147,6 @@ class GetUserExpenses(Resource):
             for exp in usr.expense_ids:
                 exp_obj: Expense = repository.get_expense(exp)
                 # Filter date
-                print(from_date)
-                print(exp_obj.date)
-                print(to_date)
                 if from_date < dateutil.parser.isoparse(exp_obj.date) < to_date:
                     result.append(exp_obj.to_dict())
             return ReturnDocument(result, "success").asdict()
