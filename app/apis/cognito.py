@@ -94,12 +94,11 @@ class InitiateForgetPassword(Resource):
     model = api.model(
         'InitiateForgetPassword', {'email': fields.String},
     )
-
-    @api.expect(model, validate=True)
     def post(self):
+        print("HIIIIs")
         """Sends a verification code to the user to use to change their password."""
         json_data = request.get_json(force=True)
-
+        print(json_data)
         email = json_data['email']
 
         try:
