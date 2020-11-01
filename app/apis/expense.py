@@ -124,37 +124,48 @@ class ExpenseStats(Resource):
             for exp in usr.expense_ids:
                 exp_obj: Expense = repository.get_expense(exp)
                 exp_list.append(exp_obj.to_dict())
+            if not exp_list:
+                data = {
+                    "exp_list": [],
+                    "area_chart": {},
+                    "bar_chart": {},
+                    "pie_chart": {},
+                    "new_expenses": 0,
+                    "monthly_expenses": 0,
+                    "friends_amount": 0,
+                    "owed_amount": 0
+                }
+            else:
+                df = pd.DataFrame(exp_list).sort_values('date')
 
-            df = pd.DataFrame(exp_list).sort_values('date')
+                df['amount'] = pd.to_numeric(df['amount'])
+                df['month'] = pd.to_numeric(df["date"].apply(lambda x: x[5:7]))
+                df['year'] = pd.to_numeric(df["date"].apply(lambda x: x[0:4]))
+                df['day'] = pd.to_numeric(df["date"].apply(lambda x: x[8:10]))
 
-            df['amount'] = pd.to_numeric(df['amount'])
-            df['month'] = pd.to_numeric(df["date"].apply(lambda x: x[5:7]))
-            df['year'] = pd.to_numeric(df["date"].apply(lambda x: x[0:4]))
-            df['day'] = pd.to_numeric(df["date"].apply(lambda x: x[8:10]))
+                now = datetime.now()
+                area_chart = df[df['year'] == now.year].groupby(['date'])['amount'].sum()
+                bar_chart = df.groupby(['month'])['amount'].sum()
 
-            now = datetime.now()
-            area_chart = df[df['year'] == now.year].groupby(['date'])['amount'].sum()
-            bar_chart = df.groupby(['month'])['amount'].sum()
+                new_expenses = df[(df['year'] == now.year) & (df['month'] == now.month) & (df['day'] == now.day)][
+                    'amount'].sum()
+                monthly_expenses = df[(df['year'] == now.year) & (df['month'] == now.month)]['amount'].sum()
 
-            new_expenses = df[(df['year'] == now.year) & (df['month'] == now.month) & (df['day'] == now.day)][
-                'amount'].sum()
-            monthly_expenses = df[(df['year'] == now.year) & (df['month'] == now.month)]['amount'].sum()
+                friends_amount = df[(df['payor'] != email_id) & (df['user_id'] == email_id)]['amount'].sum()
+                owed_amount = df[('payor' == email_id) & (df['user_id'] != email_id)]['amount'].sum()
 
-            friends_amount = df[(df['payor'] != email_id) & (df['user_id'] == email_id)]['amount'].sum()
-            owed_amount = df[('payor' == email_id) & (df['user_id'] != email_id)]['amount'].sum()
+                pie_chart = df[(df['payor'] != email_id) & (df['user_id'] == email_id)].groupby(['payor'])['amount'].sum()
 
-            pie_chart = df[(df['payor'] != email_id) & (df['user_id'] == email_id)].groupby(['payor'])['amount'].sum()
-
-            data = {
-                "exp_list": exp_list,
-                "area_chart": area_chart.to_dict(),
-                "bar_chart": bar_chart.to_dict(),
-                "pie_chart": pie_chart.to_dict(),
-                "new_expenses": new_expenses,
-                "monthly_expenses": monthly_expenses,
-                "friends_amount": friends_amount,
-                "owed_amount": owed_amount
-            }
+                data = {
+                    "exp_list": exp_list,
+                    "area_chart": area_chart.to_dict(),
+                    "bar_chart": bar_chart.to_dict(),
+                    "pie_chart": pie_chart.to_dict(),
+                    "new_expenses": new_expenses,
+                    "monthly_expenses": monthly_expenses,
+                    "friends_amount": friends_amount,
+                    "owed_amount": owed_amount
+                }
 
             return ReturnDocument(data, "success").asdict()
         except RepositoryException as err:
