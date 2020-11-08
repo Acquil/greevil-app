@@ -22,10 +22,9 @@ class Repository(object):
         self.name = 'DynamoDB'
 
         self.dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
-        settings['user_table']
 
-        self.user_index = self.dynamodb.Table('greevil-users')
-        self.expense_index = self.dynamodb.Table('greevil-expenses')
+        self.user_index = self.dynamodb.Table(settings['DYNAMODB_USER_TABLE'])
+        self.expense_index = self.dynamodb.Table(settings['DYNAMODB_EXPENSE_TABLE'])
 
     def get_user(self, id):
         """
