@@ -25,3 +25,5 @@ boto
 botocore~=1.19.8
 warrant~=0.6.1
 python-dateutil~=2.8.1
+
+pandas

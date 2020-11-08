@@ -71,7 +71,7 @@ class ConfirmUser(Resource):
 
     @api.expect(model, validate=True)
     def post(self):
-        """Logout user"""
+        """Logout user from all devices"""
         json_data = request.get_json(force=True)
 
         email = json_data['email']

@@ -22,6 +22,7 @@ class Repository(object):
         self.name = 'DynamoDB'
 
         self.dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
+        settings['user_table']
 
         self.user_index = self.dynamodb.Table('greevil-users')
         self.expense_index = self.dynamodb.Table('greevil-expenses')

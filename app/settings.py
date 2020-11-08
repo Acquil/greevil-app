@@ -14,18 +14,14 @@ awsRegion = 'us-east-1'
 # default storage
 REPOSITORY_NAME = environ.get('REPOSITORY_NAME', 'dynamodb')
 
-if REPOSITORY_NAME == 'mongodb':
-    REPOSITORY_SETTINGS = {
-        'MONGODB_HOST': environ.get('MONGODB_HOST', None),
-        'MONGODB_DATABASE': environ.get('MONGODB_DATABASE', 'test'),
-        'MONGODB_COLLECTION': environ.get('MONGODB_COLLECTION', 'videos')
-    }
-elif REPOSITORY_NAME == 'memory':
+if REPOSITORY_NAME == 'memory':
     REPOSITORY_SETTINGS = {}
 
 elif REPOSITORY_NAME == 'dynamodb':
-    REPOSITORY_SETTINGS = {}
+    REPOSITORY_SETTINGS = {
+        "DYNAMODB_USER_TABLE": environ.get('DYNAMODB_USER_TABLE', 'greevil-users'),
+        "DYNAMODB_EXPENSE_TABLE": environ.get('DYNAMODB_EXPENSE_TABLE', 'greevil-expenses')
+    }
 
 else:
     raise ValueError('Unknown repository.')
-
