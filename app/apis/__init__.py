@@ -2,6 +2,7 @@ from flask import make_response
 from flask_restx import Api
 
 from core.transformer import XmlTransformer
+from .cognito import api as cognito
 from .expense import api as expense
 from .user import api as user
 
@@ -21,3 +22,4 @@ def xml(data, code, headers):
 
 api.add_namespace(user)
 api.add_namespace(expense)
+api.add_namespace(cognito)

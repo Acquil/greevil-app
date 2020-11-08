@@ -23,8 +23,8 @@ class Repository(object):
 
         self.dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
 
-        self.user_index = self.dynamodb.Table('greevil-users')
-        self.expense_index = self.dynamodb.Table('greevil-expenses')
+        self.user_index = self.dynamodb.Table(settings['DYNAMODB_USER_TABLE'])
+        self.expense_index = self.dynamodb.Table(settings['DYNAMODB_EXPENSE_TABLE'])
 
     def get_user(self, id):
         """
@@ -110,7 +110,9 @@ class Repository(object):
         :return: Expense
         """
         try:
-            response = self.expense_index.get_item(id)
+            response = self.expense_index.get_item(
+                Key={'ExpenseId': id}
+            )
             expense_obj: Expense = Expense(
                 id=id,
                 user_id=response['Item']["For"],
@@ -138,8 +140,9 @@ class Repository(object):
         exp_obj: Expense = self.get_expense(id)
         payor = self.get_user(exp_obj.payor)
         payee = self.get_user(exp_obj.user_id)
-        payee_expenses = payee.expense_ids.remove(id)
-
+        payee_expenses = payee.expense_ids
+        payee_expenses.remove(id)
+        # TODO if None put an empty list
         self.expense_index.delete_item(
             Key={
                 'ExpenseId': id
@@ -158,7 +161,8 @@ class Repository(object):
         )
 
         if exp_obj.payor != exp_obj.user_id:
-            payor_expenses = payor.expense_ids.remove(id)
+            payor_expenses = payor.expense_ids
+            payor_expenses.remove(id)
             self.user_index.update_item(
                 Key={
                     'CustomerId': exp_obj.payor
@@ -186,7 +190,7 @@ class Repository(object):
                 'By': exp.payor
             }
         )
-
+        print(f"Expense response {response}")
         self.__expense_helper__(exp.id, exp.payor)
         if exp.user_id != exp.payor:
             self.__expense_helper__(exp.id, exp.user_id)
