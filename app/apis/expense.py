@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 from botocore.exceptions import ClientError
+from fbprophet import Prophet
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
@@ -154,7 +155,8 @@ class ExpenseStats(Resource):
                 friends_amount = df[(df['payor'] != email_id) & (df['user_id'] == email_id)]['amount'].sum()
                 owed_amount = df[('payor' == email_id) & (df['user_id'] != email_id)]['amount'].sum()
 
-                pie_chart = df[(df['payor'] != email_id) & (df['user_id'] == email_id)].groupby(['payor'])['amount'].sum()
+                pie_chart = df[(df['payor'] != email_id) & (df['user_id'] == email_id)].groupby(['payor'])[
+                    'amount'].sum()
 
                 data = {
                     "exp_list": exp_list,
@@ -168,6 +170,64 @@ class ExpenseStats(Resource):
                 }
 
             return ReturnDocument(data, "success").asdict()
+        except RepositoryException as err:
+            return ReturnDocument(err.__doc__, "error").asdict()
+        except ClientError as err:
+            return ReturnDocument(err.__str__(), "error").asdict()
+
+
+@api.route('/stats/predict/')
+class PredictStats(Resource):
+    model = api.model(
+        "PredictStats", {
+            'email': fields.String(description="User email ID", required=True),
+        }
+    )
+
+    @api.expect(model)
+    def post(self):
+        exp_list = []
+        data = request.get_json(force=True)
+        email_id = data['email']
+
+        try:
+            usr: User = repository.get_user(email_id)
+            for exp in usr.expense_ids:
+                exp_obj: Expense = repository.get_expense(exp)
+                exp_list.append(exp_obj.to_dict())
+            if not exp_list or len(exp_list) <= 10:
+                data = {
+                    "predict_chart": "Insufficient Data (atleast 10 entries required)"
+                }
+            else:
+                df = pd.DataFrame(exp_list).sort_values('date')
+
+                df['amount'] = pd.to_numeric(df['amount'])
+                df['ds'] = pd.to_datetime(df['date'])
+
+                prophet_df = pd.DataFrame()
+                prophet_df['ds'] = df['ds']
+                prophet_df['y'] = df['amount']
+
+                m = Prophet()
+                m.fit(prophet_df)
+                future = m.make_future_dataframe(periods=3, freq='MS')
+                forecast = m.predict(future)
+
+                forecast['x'] = forecast['ds'].dt.strftime('%Y-%m-%d')
+                forecast['y'] = forecast['yhat']
+
+                df = forecast[['x', 'y']].tail(12)
+                predict_chart = {
+                    "point": df.to_dict(orient='records')
+                }
+                predict_chart = {"data": predict_chart, "EndIndex": "3"}
+
+                data = {
+                    "xml": predict_chart
+                }
+            return data
+            # return ReturnDocument(data, "success").asdict()
         except RepositoryException as err:
             return ReturnDocument(err.__doc__, "error").asdict()
         except ClientError as err:
