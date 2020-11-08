@@ -221,11 +221,12 @@ class PredictStats(Resource):
                 predict_chart = {
                     "point": df.to_dict(orient='records')
                 }
-                predict_chart = {"data": predict_chart, "EndIndex": "3"}
+                predict_chart = {"data": predict_chart, "EndIndex": "9"}
 
                 data = {
                     "xml": predict_chart
                 }
+
             return data
             # return ReturnDocument(data, "success").asdict()
         except RepositoryException as err:
