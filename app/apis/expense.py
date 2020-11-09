@@ -153,7 +153,7 @@ class ExpenseStats(Resource):
                 monthly_expenses = df[(df['year'] == now.year) & (df['month'] == now.month)]['amount'].sum()
 
                 friends_amount = df[(df['payor'] != email_id) & (df['user_id'] == email_id)]['amount'].sum()
-                owed_amount = df[('payor' == email_id) & (df['user_id'] != email_id)]['amount'].sum()
+                owed_amount = df[(df['payor'] == email_id) & (df['user_id'] != email_id)]['amount'].sum()
 
                 pie_chart = df[(df['payor'] != email_id) & (df['user_id'] == email_id)].groupby(['payor'])[
                     'amount'].sum()
